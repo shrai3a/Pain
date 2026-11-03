@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pain Assessment Interactive Quiz | Al-Zaytoonah University</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js Library for generating QR Code dynamically -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f0f9ff 100%);
+        }
+        .option-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-card:hover:not(.disabled) {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="max-w-3xl mx-auto w-full bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-6 text-center">
+        <div class="inline-flex items-center justify-center p-3 bg-indigo-50 rounded-full text-indigo-600 mb-3">
+            <i class="fa-solid fa-stethoscope text-2xl"></i>
+        </div>
+        <h1 class="text-xl md:text-2xl font-bold text-indigo-950">Al-Zaytoonah University of Jordan</h1>
+        <p class="text-sm md:text-base font-semibold text-indigo-600 mt-1">Pain Assessment Seminar Interactive Quiz</p>
+        <div class="flex items-center justify-center gap-2 mt-2 text-xs md:text-sm text-slate-500 font-medium">
+            <span><i class="fa-solid fa-user-nurse mr-1"></i> By: Ayham Ahmad & Oraib Emad</span>
+            <span>•</span>
+            <span><i class="fa-solid fa-graduation-cap mr-1"></i> L. Raghad Al-Khalili</span>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-3xl mx-auto w-full bg-white rounded-2xl shadow-xl border border-indigo-100 p-6 md:p-8 flex-grow">
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="mb-6">
+            <div class="flex justify-between items-center text-xs font-semibold text-indigo-900 mb-2">
+                <span id="question-tracker">Question 1 of 5</span>
+                <span id="score-tracker" class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">Score: 0 / 5</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-indigo-600 h-full w-1/5 transition-all duration-300"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-box">
+            <!-- Question Text -->
+            <div class="mb-6">
+                <span id="category-badge" class="inline-block text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md mb-2"></span>
+                <h2 id="question-text" class="text-lg md:text-xl font-bold text-slate-900 leading-snug"></h2>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="space-y-3 mb-6"></div>
+
+            <!-- Rationale Box (Hidden by default) -->
+            <div id="rationale-box" class="hidden rounded-xl p-4 mb-6 border text-sm leading-relaxed">
+                <p id="rationale-heading" class="font-bold mb-1 flex items-center gap-2"></p>
+                <p id="rationale-text" class="text-slate-700"></p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center gap-2">
+                    <span>Next Question</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Screen (Hidden initially) -->
+        <div id="results-box" class="hidden text-center py-6">
+            <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900">Quiz Completed!</h2>
+            <p class="text-slate-500 mt-1">Here is your performance summary:</p>
+            
+            <div class="my-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 max-w-sm mx-auto">
+                <span class="text-4xl font-extrabold text-indigo-600" id="final-score">0 / 5</span>
+                <p id="score-message" class="text-sm font-semibold text-slate-600 mt-2"></p>
+            </div>
+
+            <button onclick="restartQuiz()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all inline-flex items-center gap-2 mb-8">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Retake Quiz</span>
+            </button>
+
+            <!-- Dynamic QR Code Container for Sharing -->
+            <div class="pt-6 border-t border-slate-100 flex flex-col items-center">
+                <p class="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-1.5">
+                    <i class="fa-solid fa-qrcode text-indigo-600"></i>
+                    Scan to open this quiz on your device:
+                </p>
+                <div id="qrcode" class="p-2 bg-white rounded-lg border border-slate-200 shadow-sm"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-3xl mx-auto w-full text-center mt-6 text-xs text-slate-500 font-medium">
+        <p>© Al-Zaytoonah University of Jordan — Nursing Department</p>
+    </footer>
+
+    <!-- Quiz Logic JavaScript -->
+    <script>
+        // Questions dataset based directly on the presentation slides
+        const questions = [
+            {
+                category: "Pain Fundamentals",
+                question: "According to the IASP definition, how is pain primarily recognized in nursing practice?",
+                options: [
+                    "An objective vital sign that strictly matches physical tissue damage.",
+                    "An unpleasant sensory and emotional experience linked to actual or potential tissue damage.",
+                    "A purely psychological response that doesn't require medication.",
+                    "A measurable parameter that stays constant for every patient."
+                ],
+                correct: 1,
+                explanation: "The International Association for the Study of Pain (IASP) defines pain as an unpleasant sensory and emotional experience. Pain is considered the 5th vital sign and is personal to every individual."
+            },
+            {
+                category: "Types of Pain",
+                question: "A patient complaining of burning and shooting pain down their leg due to sciatica is experiencing which type of pain?",
+                options: [
+                    "Somatic Nociceptive Pain",
+                    "Visceral Pain",
+                    "Neuropathic Pain",
+                    "Phantom Pain"
+                ],
+                correct: 2,
+                explanation: "Neuropathic pain is caused by nerve damage or nerve dysfunction, typically described as burning, shooting, or stinging (e.g., sciatica, diabetic neuropathy)."
+            },
+            {
+                category: "Pain Assessment Framework",
+                question: "In the PQRSTUO pain assessment framework, what does the letter 'Q' stand for?",
+                options: [
+                    "Quantity (How much medicine was taken)",
+                    "Quality (What does the pain feel like: sharp, dull, burning)",
+                    "Quickness (How fast the pain started)",
+                    "Quietness (Whether the patient groans or stays quiet)"
+                ],
+                correct: 1,
+                explanation: "Q stands for Quality, which describes the sensation of the pain (e.g., sharp, throbbing, dull, burning)."
+            },
+            {
+                category: "Pain Scales",
+                question: "Which pain scale is most appropriate for assessing pain in infants and non-verbal patients by evaluating Face, Legs, Activity, Cry, and Consolability?",
+                options: [
+                    "Numeric Rating Scale (NRS)",
+                    "Wong-Baker FACES Scale",
+                    "FLACC Scale",
+                    "McGill Pain Questionnaire"
+                ],
+                correct: 2,
+                explanation: "The FLACC scale evaluates 5 behavioral parameters (Face, Legs, Activity, Cry, Consolability) rated 0–2 each, ideal for infants and non-verbal patients."
+            },
+            {
+                category: "Pain Management",
+                question: "Which of the following interventions represents a non-pharmacological method for pain relief?",
+                options: [
+                    "Administering Acetaminophen as ordered",
+                    "Deep breathing exercises and guided imagery",
+                    "Applying a Lidocaine patch",
+                    "Giving Morphine IV for severe pain"
+                ],
+                correct: 1,
+                explanation: "Deep breathing, guided imagery, relaxation techniques, positioning, heat/cold, and music therapy are essential non-pharmacological pain management strategies."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Initialize Quiz
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestionIndex];
+            
+            // Update UI elements
+            document.getElementById("category-badge").innerText = q.category;
+            document.getElementById("question-text").innerText = q.question;
+            document.getElementById("question-tracker").innerText = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            document.getElementById("score-tracker").innerText = `Score: ${score} / ${questions.length}`;
+            
+            // Progress Bar
+            const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById("progress-bar").style.width = `${progressPercent}%`;
+
+            // Reset Rationale & Next Button
+            document.getElementById("rationale-box").classList.add("hidden");
+            document.getElementById("next-btn").classList.add("hidden");
+
+            // Render Options
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement("button");
+                btn.className = "option-card w-full text-left p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 text-sm md:text-base font-medium text-slate-700 flex items-center justify-between";
+                btn.onclick = () => selectOption(index);
+                btn.innerHTML = `
+                    <span class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-full bg-white border border-slate-300 flex items-center justify-center text-xs font-bold text-slate-500">${String.fromCharCode(65 + index)}</span>
+                        <span>${option}</span>
+                    </span>
+                    <i class="fa-regular fa-circle text-slate-300 text-lg status-icon"></i>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Handle Selection
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentQuestionIndex];
+            const optionsButtons = document.getElementById("options-container").children;
+            const rationaleBox = document.getElementById("rationale-box");
+            const rationaleHeading = document.getElementById("rationale-heading");
+            const rationaleText = document.getElementById("rationale-text");
+
+            // Disable hover effects
+            Array.from(optionsButtons).forEach(btn => btn.classList.add("disabled", "cursor-default"));
+
+            if (selectedIndex === q.correct) {
+                score++;
+                optionsButtons[selectedIndex].className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-950 font-medium text-sm md:text-base flex items-center justify-between";
+                optionsButtons[selectedIndex].querySelector(".status-icon").className = "fa-solid fa-circle-check text-emerald-600 text-lg";
+                
+                rationaleBox.className = "rounded-xl p-4 mb-6 border border-emerald-200 bg-emerald-50/60 text-sm leading-relaxed";
+                rationaleHeading.className = "font-bold mb-1 flex items-center gap-2 text-emerald-900";
+                rationaleHeading.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct!`;
+            } else {
+                optionsButtons[selectedIndex].className = "w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-950 font-medium text-sm md:text-base flex items-center justify-between";
+                optionsButtons[selectedIndex].querySelector(".status-icon").className = "fa-solid fa-circle-xmark text-rose-600 text-lg";
+
+                // Highlight Correct Answer
+                optionsButtons[q.correct].className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-950 font-medium text-sm md:text-base flex items-center justify-between";
+                optionsButtons[q.correct].querySelector(".status-icon").className = "fa-solid fa-circle-check text-emerald-600 text-lg";
+
+                rationaleBox.className = "rounded-xl p-4 mb-6 border border-rose-200 bg-rose-50/60 text-sm leading-relaxed";
+                rationaleHeading.className = "font-bold mb-1 flex items-center gap-2 text-rose-900";
+                rationaleHeading.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Incorrect`;
+            }
+
+            document.getElementById("score-tracker").innerText = `Score: ${score} / ${questions.length}`;
+            rationaleText.innerText = q.explanation;
+            rationaleBox.classList.remove("hidden");
+            document.getElementById("next-btn").classList.remove("hidden");
+        }
+
+        // Advance Question or Finish
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Show Results
+        function showResults() {
+            document.getElementById("quiz-box").classList.add("hidden");
+            document.getElementById("progress-container").classList.add("hidden");
+            document.getElementById("results-box").classList.remove("hidden");
+            
+            document.getElementById("final-score").innerText = `${score} / ${questions.length}`;
+
+            const msg = document.getElementById("score-message");
+            if (score === 5) {
+                msg.innerText = "Outstanding! Perfect score 10/10!";
+            } else if (score >= 3) {
+                msg.innerText = "Great job! Good grasp of Pain Assessment principles.";
+            } else {
+                msg.innerText = "Good attempt! Review the seminar slides and try again.";
+            }
+
+            // Generate QR Code dynamically for sharing current URL
+            generateQRCode();
+        }
+
+        // Restart Quiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById("results-box").classList.add("hidden");
+            document.getElementById("progress-container").classList.remove("hidden");
+            document.getElementById("quiz-box").classList.remove("hidden");
+            loadQuestion();
+        }
+
+        // Generate QR Code using current window location
+        function generateQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = ""; // Clear previous QR
+            new QRCode(qrContainer, {
+                text: window.location.href || "https://al-zaytoonah.edu.jo",
+                width: 120,
+                height: 120,
+                colorDark: "#312e81",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Start Quiz on load
+        window.onload = function() {
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
